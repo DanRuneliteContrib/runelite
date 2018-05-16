@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Raqes <j.raqes@gmail.com>
+ * Copyright (c) 2018, Kruithne <kruithne@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,43 +22,30 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.specialcounter;
+package net.runelite.client.plugins.skillcalculator;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.ToString;
+import com.google.gson.Gson;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
+import net.runelite.client.plugins.skillcalculator.beans.SkillData;
 
-@AllArgsConstructor
-@Getter
-@ToString
-enum Boss
+class CacheSkillData
 {
-	ABYSSAL_SIRE("Abyssal sire", 1.25d),
-	CALLISTO("Callisto", 1.225d),
-	CERBERUS("Cerberus", 1.15d),
-	CHAOS_ELEMENTAL("Chaos elemental", 1.075d),
-	CORPOREAL_BEAST("Corporeal Beast", 1.55d),
-	GENERAL_GRAARDOR("General Graardor", 1.325d),
-	GIANT_MOLE("Giant Mole", 1.075d),
-	KALPHITE_QUEEN("Kalphite Queen", 1.05d),
-	KING_BLACK_DRAGON("King Black Dragon", 1.075d),
-	KRIL_TSUROTH("K'ril Tsutsaroth", 1.375d),
-	VENETENATIS("Venenatis", 1.4d),
-	VETION("Vet'ion", 1.225d);
+	private final Map<String, SkillData> cache = new HashMap<>();
 
-	private final String name;
-	private final double modifier; // Some NPCs have a modifier to the experience a player receives.
-
-	public static Boss getBoss(String name)
+	SkillData getSkillData(String dataFile)
 	{
-		for (Boss boss : values())
+		if (cache.containsKey(dataFile))
 		{
-			if (boss.getName().equals(name))
-			{
-				return boss;
-			}
+			return cache.get(dataFile);
 		}
-		return null;
-	}
 
+		InputStream skillDataFile = SkillCalculatorPlugin.class.getResourceAsStream(dataFile);
+		SkillData skillData = new Gson().fromJson(new InputStreamReader(skillDataFile), SkillData.class);
+
+		cache.put(dataFile, skillData);
+		return skillData;
+	}
 }

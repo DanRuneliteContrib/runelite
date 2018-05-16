@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Raqes <j.raqes@gmail.com>
+ * Copyright (c) 2018, Morgan Lewis <https://github.com/MESLewis>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,43 +22,37 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.specialcounter;
+package net.runelite.mixins;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.ToString;
+import net.runelite.api.mixins.Mixin;
+import net.runelite.api.mixins.Replace;
+import net.runelite.api.mixins.Shadow;
+import net.runelite.rs.api.RSClient;
+import net.runelite.rs.api.RSWorldMapManager;
 
-@AllArgsConstructor
-@Getter
-@ToString
-enum Boss
+@Mixin(RSWorldMapManager.class)
+public abstract class WorldMapManagerMixin implements RSWorldMapManager
 {
-	ABYSSAL_SIRE("Abyssal sire", 1.25d),
-	CALLISTO("Callisto", 1.225d),
-	CERBERUS("Cerberus", 1.15d),
-	CHAOS_ELEMENTAL("Chaos elemental", 1.075d),
-	CORPOREAL_BEAST("Corporeal Beast", 1.55d),
-	GENERAL_GRAARDOR("General Graardor", 1.325d),
-	GIANT_MOLE("Giant Mole", 1.075d),
-	KALPHITE_QUEEN("Kalphite Queen", 1.05d),
-	KING_BLACK_DRAGON("King Black Dragon", 1.075d),
-	KRIL_TSUROTH("K'ril Tsutsaroth", 1.375d),
-	VENETENATIS("Venenatis", 1.4d),
-	VETION("Vet'ion", 1.225d);
+	@Shadow("clientInstance")
+	static RSClient client;
 
-	private final String name;
-	private final double modifier; // Some NPCs have a modifier to the experience a player receives.
+	/*
+	 The worldMapZoom is essentially pixels per tile. In most instances
+	 getPixelsPerTile returns the same as worldMapZoom.
 
-	public static Boss getBoss(String name)
+	 At some map widths when 100% zoomed in the Jagex version of this function
+	 returns 7.89 instead of 8.0 (the worldMapZoom at this level).
+	 This would cause both the x and y positions of the map to shift
+	 slightly when the map was certain widths.
+
+	 This mixin function replaces Jagex calculation with getWorldMapZoom.
+	 This small change makes the world map tile sizing predictable.
+	 */
+	@Replace("getPixelsPerTile")
+	@Override
+	public float getPixelsPerTile(int graphicsDiff, int worldDiff)
 	{
-		for (Boss boss : values())
-		{
-			if (boss.getName().equals(name))
-			{
-				return boss;
-			}
-		}
-		return null;
+		return client.getRenderOverview().getWorldMapZoom();
 	}
 
 }
